@@ -1,4 +1,4 @@
-package com.glandroid.weatherreport;
+package com.glandroid.xmlparser;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.glandroid.weatherreport;
+package com.glandroid.xmlparser;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

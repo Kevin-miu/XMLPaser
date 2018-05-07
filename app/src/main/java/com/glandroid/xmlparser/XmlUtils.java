@@ -1,58 +1,36 @@
-# XML解析方法
+package com.glandroid.xmlparser;
 
-本项目通过解析天气预报的文件来分析XML文件的两种解析方式：
+import android.util.Xml;
 
-- XML数据的Dom解析
-- XML数据的Pull解析
-- XML数据的Sax解析
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xmlpull.v1.XmlPullParser;
 
-## 1.获取XML文件
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
-本项目直接在Asset文件夹中模拟创建XML数据：
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
-```xml
-<students>
-    <student>
-        <name sex="man">小明</name>
-        <nickName>明明</nickName>
-    </student>
-    <student>
-        <name sex="woman">小红</name>
-        <nickName>红红</nickName>
-    </student>
-    <student>
-        <name sex="man">小亮</name>
-        <nickName>亮亮</nickName>
-    </student>
-</students>
-```
+/**
+ * @author Kevin-
+ * @time
+ * @description
+ * @updateTime
+ */
 
-## 2.创建对应XML的Bean对象
-
-```java
-public class Student {
-    private String name;
-    private String sex;
-    private String nickName;
-
-    @Override
-    public String toString() {
-        return "Student{" +
-                "name='" + name + '\'' +
-                ", sex='" + sex + '\'' +
-                ", nickName='" + nickName + '\'' +
-                '}';
-    }
-}
-```
+public class XmlUtils {
 
 
-## 3.Dom解析
-
-- DOM解析XML文件时，会将XML文件的所有内容读取到内存中（内存的消耗比较大），然后允许您使用DOM API遍历XML树、检索所需的数据。
-
-```java
-public List<Student> dom2xml(InputStream is) throws Exception {
+    public List<Student> dom2xml(InputStream is) throws Exception {
         //一系列的初始化
         List<Student> list = new ArrayList<>();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -92,65 +70,9 @@ public List<Student> dom2xml(InputStream is) throws Exception {
         }
         return list;
     }
-```
 
 
-## 4.Pull解析
-
-- Pull解析器的运行方式与 SAX 解析器相似。
-
-```java
-public List<Student> pull2xml(InputStream is) throws Exception {
-        List<Student> list = null;
-        Student student = null;
-        //创建xmlPull解析器
-        XmlPullParser parser = Xml.newPullParser();
-        ///初始化xmlPull解析器
-        parser.setInput(is, "utf-8");
-        //读取文件的类型
-        int type = parser.getEventType();
-        //无限判断文件类型进行读取
-        while (type != XmlPullParser.END_DOCUMENT) {
-            switch (type) {
-                //开始标签
-                case XmlPullParser.START_TAG:
-                    if ("students".equals(parser.getName())) {
-                        list = new ArrayList<>();
-                    } else if ("student".equals(parser.getName())) {
-                        student = new Student();
-                    } else if ("name".equals(parser.getName())) {
-                        //获取sex属性
-                        String sex = parser.getAttributeValue(null,"sex");
-                        student.setSex(sex);
-                        //获取name值
-                        String name = parser.nextText();
-                        student.setName(name);
-                    } else if ("nickName".equals(parser.getName())) {
-                        //获取nickName值
-                        String nickName = parser.nextText();
-                        student.setNickName(nickName);
-                    }
-                    break;
-                //结束标签
-                case XmlPullParser.END_TAG:
-                    if ("student".equals(parser.getName())) {
-                        list.add(student);
-                    }
-                    break;
-            }
-            //继续往下读取标签类型
-            type = parser.next();
-        }
-        return list;
-    }
-```
-
-## 5.Sax解析
-
-- SAX是一个解析速度快并且占用内存少的xml解析器，SAX解析XML文件采用的是事件驱动，它并不需要解析完整个文档，而是按内容顺序解析文档的过程（不推荐）。
-
-```java
-public List<Student> sax2xml(InputStream is) throws Exception {
+    public List<Student> sax2xml(InputStream is) throws Exception {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         //初始化Sax解析器
         SAXParser sp = spf.newSAXParser();
@@ -256,12 +178,48 @@ public List<Student> sax2xml(InputStream is) throws Exception {
             return list;
         }
     }
-```
 
-
-## 6.三种方法的对比
-
-- SAX解析器的工作方式是自动将事件推入事件处理器进行处理，因此你不能控制事件的处理主动结束；而Pull解析器的工作方式为允许你的应用程序代码**主动**从解析器中获取事件，因此可以在满足了需要的条件后不再获取事件，结束解析。
-- SAX解析器的优点是解析速度快，占用内存少。非常适合在Android移动设备中使用。
-- 由于DOM在内存中以树形结构存放，因此检索和更新效率会更高。但是对于特别大的文档，解析和加载整个文档将会很耗资源。
-- PULL解析器的运行方式和SAX类似。PULL解析器小巧轻便，解析速度快，简单易用，非常适合在Android移动设备中使用，Android系统内部在解析各种XML时也是用PULL解析器。
+    public List<Student> pull2xml(InputStream is) throws Exception {
+        List<Student> list = null;
+        Student student = null;
+        //创建xmlPull解析器
+        XmlPullParser parser = Xml.newPullParser();
+        ///初始化xmlPull解析器
+        parser.setInput(is, "utf-8");
+        //读取文件的类型
+        int type = parser.getEventType();
+        //无限判断文件类型进行读取
+        while (type != XmlPullParser.END_DOCUMENT) {
+            switch (type) {
+                //开始标签
+                case XmlPullParser.START_TAG:
+                    if ("students".equals(parser.getName())) {
+                        list = new ArrayList<>();
+                    } else if ("student".equals(parser.getName())) {
+                        student = new Student();
+                    } else if ("name".equals(parser.getName())) {
+                        //获取sex属性
+                        String sex = parser.getAttributeValue(null,"sex");
+                        student.setSex(sex);
+                        //获取name值
+                        String name = parser.nextText();
+                        student.setName(name);
+                    } else if ("nickName".equals(parser.getName())) {
+                        //获取nickName值
+                        String nickName = parser.nextText();
+                        student.setNickName(nickName);
+                    }
+                    break;
+                //结束标签
+                case XmlPullParser.END_TAG:
+                    if ("student".equals(parser.getName())) {
+                        list.add(student);
+                    }
+                    break;
+            }
+            //继续往下读取标签类型
+            type = parser.next();
+        }
+        return list;
+    }
+}
